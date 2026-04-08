@@ -1361,6 +1361,61 @@
 </div>
 
 <!-- 첫 대화 챌린지 모달 -->
+<!-- 레벨 테스트 모달 -->
+<div id="levelTestModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:600; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; padding:24px;">
+  <div style="background:var(--surface); border-radius:28px; padding:32px 28px; max-width:420px; width:100%; animation:fadeUp 0.3s ease; position:relative; max-height:90vh; overflow-y:auto;">
+
+    <!-- 인트로 화면 -->
+    <div id="lt_intro">
+      <div style="text-align:center; margin-bottom:20px;">
+        <div style="font-size:52px; margin-bottom:10px;">📊</div>
+        <div style="font-size:20px; font-weight:800; color:var(--accent); margin-bottom:8px;">나의 영어 레벨은?</div>
+        <div style="font-size:14px; color:var(--text2); line-height:1.7;">10문제로 딱 맞는 레벨을 찾아드려요!<br>문제를 모르면 <strong>패스</strong>해도 괜찮아요 😊</div>
+      </div>
+      <div style="background:rgba(232,98,138,0.06); border-radius:var(--radius-sm); padding:16px; margin-bottom:20px;">
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--text2);">
+          <div>⏱️ 약 2~3분 소요</div>
+          <div>📝 총 10문제</div>
+          <div>🎯 결과에 따라 레벨 자동 배정</div>
+        </div>
+      </div>
+      <button onclick="startLevelTest()" class="btn-primary" style="margin:0 0 10px;">시작하기 🚀</button>
+      <button onclick="skipLevelTest()" style="width:100%; padding:12px; background:transparent; border:none; color:var(--text3); font-size:13px; cursor:pointer;">건너뛰기 (Lv.1 왕초보로 시작)</button>
+    </div>
+
+    <!-- 문제 화면 -->
+    <div id="lt_quiz" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="font-size:13px; font-weight:700; color:var(--text2);">문제 <span id="lt_qnum">1</span> / 10</div>
+        <div style="font-size:12px; color:var(--accent); font-weight:700;">점수: <span id="lt_pts">0</span></div>
+      </div>
+      <!-- 진행바 -->
+      <div style="height:6px; background:var(--surface2); border-radius:3px; margin-bottom:20px; overflow:hidden;">
+        <div id="lt_progress" style="height:100%; background:var(--accent); width:10%; transition:width 0.3s ease; border-radius:3px;"></div>
+      </div>
+      <div id="lt_category" style="font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;"></div>
+      <div id="lt_question" style="font-size:16px; font-weight:700; color:var(--text); line-height:1.6; margin-bottom:20px; min-height:60px;"></div>
+      <div id="lt_options" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
+      <button onclick="passLevelTest()" style="width:100%; padding:10px; background:transparent; border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text3); font-size:13px; cursor:pointer;">모르겠어요 (패스)</button>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="lt_result" style="display:none; text-align:center;">
+      <div id="lt_result_emoji" style="font-size:64px; margin-bottom:12px;"></div>
+      <div style="font-size:13px; color:var(--text2); text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">당신의 레벨</div>
+      <div id="lt_result_level" style="font-size:48px; font-weight:800; color:var(--accent); line-height:1; margin-bottom:4px;"></div>
+      <div id="lt_result_name" style="font-size:20px; font-weight:800; color:var(--text); margin-bottom:12px;"></div>
+      <div id="lt_result_desc" style="font-size:14px; color:var(--text2); line-height:1.7; margin-bottom:20px;"></div>
+      <div style="background:rgba(232,98,138,0.06); border-radius:var(--radius-sm); padding:14px; margin-bottom:20px;">
+        <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">맞힌 문제</div>
+        <div id="lt_result_score" style="font-size:22px; font-weight:800; color:var(--accent);"></div>
+      </div>
+      <button onclick="applyLevelTest()" class="btn-primary" style="margin:0;">이 레벨로 시작하기! 🎯</button>
+    </div>
+
+  </div>
+</div>
+
 <div id="firstChallengeModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:500; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; padding:24px;">
   <div style="background:var(--surface); border-radius:28px; padding:36px 28px; max-width:380px; width:100%; text-align:center; animation:fadeUp 0.3s ease; position:relative;">
     <div style="font-size:60px; margin-bottom:12px;">🏆</div>
@@ -2798,6 +2853,7 @@ async function handleDemoLogin() {
     level: 4,
     streak: 7,
     totalSessions: 23,
+    plan: 'premium',
     stats: { vocabMastered: 42, grammarCorrect: 15, grammarTotal: 20 },
     settings: { nativeAccent: 'us', ttsSpeed: 1.0 },
   };
@@ -2823,6 +2879,7 @@ async function enterApp(isDemo = false) {
   updateUI();
   loadWordbook();
   initDailyCards();
+  showLevelTestModal();
   showFirstChallengeModal();
   setTimeout(showOnboarding, 1000);
 
@@ -4980,6 +5037,141 @@ function endDefinitionGame() {
   document.getElementById('df_options').style.display = 'none';
   document.getElementById('df_definition').parentElement.style.display = 'none';
   document.getElementById('df_result').style.display = 'block';
+}
+
+// ══════════════════════════════════════
+// 📊 레벨 테스트
+// ══════════════════════════════════════
+const LEVEL_TEST_QUESTIONS = [
+  // Lv.1 (1점)
+  { q: '빈칸에 알맞은 것은?\n"___ am a student."', options:['I','My','Me','Mine'], answer:'I', point:1, category:'기초 문법' },
+  { q: '빈칸에 알맞은 것은?\n"She ___ coffee every morning."', options:['drink','drinks','drinking','drank'], answer:'drinks', point:1, category:'기초 문법' },
+  // Lv.2 (2점)
+  { q: '빈칸에 알맞은 것은?\n"I ___ to school yesterday."', options:['go','goes','went','going'], answer:'went', point:2, category:'과거시제' },
+  { q: '올바른 문장은?', options:['She don\'t like it.','She doesn\'t likes it.','She doesn\'t like it.','She not like it.'], answer:'She doesn\'t like it.', point:2, category:'부정문' },
+  // Lv.3 (3점)
+  { q: '빈칸에 알맞은 것은?\n"If it rains tomorrow, I ___ stay home."', options:['will','would','should','shall'], answer:'will', point:3, category:'조건문' },
+  { q: '"The meeting has been cancelled." 이 문장의 시제는?', options:['현재형','현재완료 수동태','과거형','미래형'], answer:'현재완료 수동태', point:3, category:'수동태' },
+  // Lv.4 (4점)
+  { q: '빈칸에 알맞은 것은?\n"Had she arrived earlier, we ___ met her."', options:['could have','could','can have','would'], answer:'could have', point:4, category:'가정법' },
+  { q: '"Despite the difficulty, she succeeded." 에서 Despite의 역할은?', options:['원인','대조','결과','조건'], answer:'대조', point:4, category:'고급 어휘' },
+  // Lv.5 (5점)
+  { q: '"The report, together with its appendices, ___ submitted."', options:['were','was','are','have been'], answer:'was', point:5, category:'주어-동사 일치' },
+  { q: '다음 중 가장 격식체인 표현은?', options:['I want to know','I\'d like to know','I need to know','Wanna know'], answer:'I\'d like to know', point:5, category:'어조/격식' },
+];
+
+let ltCurrentIdx = 0;
+let ltScore = 0;
+let ltCorrect = 0;
+let ltResultLevel = 1;
+
+function showLevelTestModal() {
+  const done = localStorage.getItem('levelTestDone');
+  if (done) return; // 이미 했으면 표시 안 함
+  setTimeout(() => {
+    document.getElementById('levelTestModal').style.display = 'flex';
+  }, 500);
+}
+
+function startLevelTest() {
+  ltCurrentIdx = 0;
+  ltScore = 0;
+  ltCorrect = 0;
+  document.getElementById('lt_intro').style.display = 'none';
+  document.getElementById('lt_quiz').style.display = 'block';
+  document.getElementById('lt_result').style.display = 'none';
+  showLevelTestQuestion();
+}
+
+function showLevelTestQuestion() {
+  if (ltCurrentIdx >= LEVEL_TEST_QUESTIONS.length) {
+    showLevelTestResult();
+    return;
+  }
+  const q = LEVEL_TEST_QUESTIONS[ltCurrentIdx];
+  document.getElementById('lt_qnum').textContent = ltCurrentIdx + 1;
+  document.getElementById('lt_pts').textContent = ltScore;
+  document.getElementById('lt_progress').style.width = ((ltCurrentIdx + 1) / LEVEL_TEST_QUESTIONS.length * 100) + '%';
+  document.getElementById('lt_category').textContent = q.category;
+  document.getElementById('lt_question').textContent = q.q;
+  document.getElementById('lt_options').innerHTML = q.options.map(opt => `
+    <button onclick="answerLevelTest('${opt.replace(/'/g, "\\'")}')"
+      style="padding:14px 16px; background:var(--surface); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-weight:600; cursor:pointer; text-align:left; color:var(--text); transition:all 0.15s; width:100%;"
+      onmouseover="this.style.borderColor='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)'">
+      ${opt}
+    </button>`).join('');
+}
+
+function answerLevelTest(selected) {
+  const q = LEVEL_TEST_QUESTIONS[ltCurrentIdx];
+  if (selected === q.answer) {
+    ltScore += q.point;
+    ltCorrect++;
+  }
+  ltCurrentIdx++;
+  showLevelTestQuestion();
+}
+
+function passLevelTest() {
+  ltCurrentIdx++;
+  showLevelTestQuestion();
+}
+
+function showLevelTestResult() {
+  // 점수에 따라 레벨 배정
+  // 최대 점수: 1+1+2+2+3+3+4+4+5+5 = 30
+  let level = 1;
+  if (ltScore >= 25) level = 7;
+  else if (ltScore >= 19) level = 6;
+  else if (ltScore >= 14) level = 5;
+  else if (ltScore >= 10) level = 4;
+  else if (ltScore >= 6)  level = 3;
+  else if (ltScore >= 3)  level = 2;
+  else level = 1;
+
+  ltResultLevel = level;
+
+  const LV_BADGES = ['🌱','🌿','📗','📘','💬','💪','⭐','🌟'];
+  const LV_NAMES  = ['왕초보','초보','입문','초급','초중급','중급','중상급','상급'];
+  const LV_DESCS  = [
+    '처음부터 차근차근 시작해요! 알파벳부터 함께 배워봐요 😊',
+    '기초를 다지고 있어요! 인사말부터 시작해봐요 🌿',
+    '기초 단어를 알고 있네요! 문장 만들기에 도전해봐요 📗',
+    '현재시제를 잘 알고 있어요! 회화에 도전해봐요 📘',
+    '일상 회화가 가능한 수준이에요! 더 복잡한 표현을 배워봐요 💬',
+    '중급 수준이에요! 비즈니스 영어에 도전해봐요 💪',
+    '고급 문법까지 알고 있네요! 원서 읽기에 도전해봐요 ⭐',
+    '거의 원어민 수준이에요! 고급 표현을 마스터해봐요 🌟',
+  ];
+
+  document.getElementById('lt_quiz').style.display = 'none';
+  document.getElementById('lt_result').style.display = 'block';
+  document.getElementById('lt_result_emoji').textContent = LV_BADGES[level] || '🌱';
+  document.getElementById('lt_result_level').textContent = 'Lv.' + level;
+  document.getElementById('lt_result_name').textContent = LV_NAMES[level] || '왕초보';
+  document.getElementById('lt_result_desc').textContent = LV_DESCS[level] || '';
+  document.getElementById('lt_result_score').textContent = ltCorrect + ' / ' + LEVEL_TEST_QUESTIONS.length + '문제 정답';
+}
+
+function applyLevelTest() {
+  localStorage.setItem('levelTestDone', 'true');
+  document.getElementById('levelTestModal').style.display = 'none';
+
+  // 레벨 적용 (로컬에만 반영, Firebase는 실제 XP로 관리)
+  if (state.userProfile) {
+    const LV_THRESH = [0,100,250,500,900,1400,2100,3000,4200,5800,8000];
+    state.userProfile.level = ltResultLevel;
+    state.userProfile.xp = LV_THRESH[ltResultLevel] || 0;
+    updateUI();
+  }
+  showToast('🎯 Lv.' + ltResultLevel + ' 로 시작해요! 화이팅! 😊');
+}
+
+function skipLevelTest() {
+  localStorage.setItem('levelTestDone', 'true');
+  document.getElementById('levelTestModal').style.display = 'none';
+  showToast('🌱 Lv.1 왕초보로 시작해요! 화이팅! 😊');
 }
 
 function hideBeginnnerBanner() {
