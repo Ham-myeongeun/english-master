@@ -151,6 +151,7 @@
     justify-content: center;
     padding: 24px;
   }
+  #loginScreen { display: none; }
   #loginScreen.active { display: flex; }
 
   #appScreen {
@@ -2862,7 +2863,6 @@ async function enterApp(isDemo = false) {
   const loginScreen = document.getElementById('loginScreen');
   const appScreen = document.getElementById('appScreen');
   loginScreen.classList.remove('active');
-  loginScreen.style.display = 'none';
   appScreen.classList.add('active');
   appScreen.scrollTop = 0;
   window.scrollTo(0, 0);
@@ -2881,9 +2881,7 @@ function handleLogout() {
   const loginScreen = document.getElementById('loginScreen');
   const appScreen = document.getElementById('appScreen');
   appScreen.classList.remove('active');
-  appScreen.style.display = 'none';
   loginScreen.classList.add('active');
-  loginScreen.style.display = '';
   document.getElementById('chatMessages').innerHTML = `<div class="msg ai"><div class="msg-bubble">안녕하세요! 저는 AI 영어 튜터예요 🎓<br>영어로 자유롭게 대화해보세요!</div></div>`;
 }
 
