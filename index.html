@@ -139,19 +139,18 @@
     background: var(--bg);
     -webkit-overflow-scrolling: touch;
   }
-  .screen.active { display: flex; flex-direction: column; }
+  .screen.active { display: block; }
 
   /* ══════════════════════════════════════
      로그인 화면
   ══════════════════════════════════════ */
   #loginScreen {
     min-height: 100vh;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     padding: 24px;
   }
-  #loginScreen { display: none; }
   #loginScreen.active { display: flex; }
 
   #appScreen {
@@ -1353,11 +1352,13 @@
 
 
 </style>
-</head>
-<body>
-
-<!-- 꽃잎 -->
-<div id="petals"></div>
+    <!-- CTA 버튼 -->
+    <button onclick="handlePremiumUpgrade()" class="btn-primary" style="margin:0; font-size:16px; padding:18px;">
+      👑 지금 프리미엄 시작하기
+    </button>
+    <div style="font-size:12px; color:var(--text3); margin-top:12px;">7일 무료 체험 · 신용카드 불필요</div>
+  </div>
+</div>
 
 <!-- 첫 대화 챌린지 모달 -->
 <!-- 레벨 테스트 모달 -->
@@ -1448,6 +1449,15 @@
     <button onclick="closeLevelUp()" class="btn-primary" style="margin:0;">🚀 계속 학습하기</button>
   </div>
 </div>
+
+<!-- 프리미엄 업그레이드 모달 -->
+ 
+  </style>
+</head>
+<body>
+
+<!-- 꽃잎 -->
+<div id="petals"></div>
 
 <!-- 프리미엄 업그레이드 모달 -->
 <div id="premiumModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:300; background:rgba(61,43,53,0.5); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:24px;">
@@ -2863,6 +2873,7 @@ async function enterApp(isDemo = false) {
   const loginScreen = document.getElementById('loginScreen');
   const appScreen = document.getElementById('appScreen');
   loginScreen.classList.remove('active');
+  loginScreen.style.display = 'none';
   appScreen.classList.add('active');
   appScreen.scrollTop = 0;
   window.scrollTo(0, 0);
@@ -2881,7 +2892,9 @@ function handleLogout() {
   const loginScreen = document.getElementById('loginScreen');
   const appScreen = document.getElementById('appScreen');
   appScreen.classList.remove('active');
+  appScreen.style.display = 'none';
   loginScreen.classList.add('active');
+  loginScreen.style.display = '';
   document.getElementById('chatMessages').innerHTML = `<div class="msg ai"><div class="msg-bubble">안녕하세요! 저는 AI 영어 튜터예요 🎓<br>영어로 자유롭게 대화해보세요!</div></div>`;
 }
 
