@@ -2886,8 +2886,9 @@ async function enterApp(isDemo = false) {
 }
 
 function handleLogout() {
+  state._loggingOut = true;
   if (auth) auth.signOut();
-  state = { idToken: null, uid: null, userProfile: null, chatMessages: [], chatMode: 'chat', selectedVoice: 'us_female', wordbook: [], currentAudio: null };
+  state = { idToken: null, uid: null, userProfile: null, chatMessages: [], chatMode: 'chat', selectedVoice: 'us_female', wordbook: [], currentAudio: null, _loggingOut: false };
   const loginScreen = document.getElementById('loginScreen');
   const appScreen = document.getElementById('appScreen');
   appScreen.classList.remove('active');
@@ -5196,7 +5197,7 @@ function handlePremiumUpgrade() {
 // ══════════════════════════════════════
 if (firebaseOk && auth) {
   auth.onAuthStateChanged(async (user) => {
-    if (user && !state.idToken) {
+    if (user && !state.idToken && !state._loggingOut) {
       state.idToken = await user.getIdToken();
       state.uid = user.uid;
       await enterApp();
