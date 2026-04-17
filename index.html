@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -2882,6 +2883,7 @@ async function enterApp(isDemo = false) {
   showLevelTestModal();
   showFirstChallengeModal();
   setTimeout(showOnboarding, 1000);
+  setTimeout(() => { updateMission('login'); renderMissions(); }, 500);
 
 }
 
@@ -2946,6 +2948,211 @@ function updateUI() {
 // ══════════════════════════════════════
 // 네비게이션
 // ══════════════════════════════════════
+// ─────────────────────────────────────
+// 미션 시스템
+// ─────────────────────────────────────
+const MISSION_POOL = {
+  0: [
+    { id:'chat1',    type:'chat',    label:'AI와 대화 1번 하기',          target:1,  xp:20,  icon:'🤖' },
+    { id:'vocab1',   type:'vocab',   label:'단어 플래시카드 1개 맞추기',    target:1,  xp:15,  icon:'📖' },
+    { id:'login1',   type:'login',   label:'오늘 앱 접속하기',              target:1,  xp:10,  icon:'✅' },
+  ],
+  1: [
+    { id:'chat2',    type:'chat',    label:'AI와 대화 2번 하기',          target:2,  xp:30,  icon:'🤖' },
+    { id:'vocab3',   type:'vocab',   label:'단어 플래시카드 3개 맞추기',    target:3,  xp:25,  icon:'📖' },
+    { id:'tts1',     type:'tts',     label:'발음 연습 1번 하기',           target:1,  xp:20,  icon:'🎙️' },
+    { id:'login1',   type:'login',   label:'오늘 앱 접속하기',              target:1,  xp:10,  icon:'✅' },
+  ],
+  2: [
+    { id:'chat3',    type:'chat',    label:'AI와 대화 3번 하기',          target:3,  xp:40,  icon:'🤖' },
+    { id:'vocab5',   type:'vocab',   label:'단어 플래시카드 5개 맞추기',    target:5,  xp:35,  icon:'📖' },
+    { id:'tts2',     type:'tts',     label:'발음 연습 2번 하기',           target:2,  xp:30,  icon:'🎙️' },
+    { id:'writing1', type:'writing', label:'영작 연습 1번 하기',           target:1,  xp:35,  icon:'✍️' },
+  ],
+  3: [
+    { id:'chat5',    type:'chat',    label:'AI와 대화 5번 하기',          target:5,  xp:50,  icon:'🤖' },
+    { id:'vocab8',   type:'vocab',   label:'단어 플래시카드 8개 맞추기',    target:8,  xp:45,  icon:'📖' },
+    { id:'tts3',     type:'tts',     label:'발음 연습 3번 하기',           target:3,  xp:40,  icon:'🎙️' },
+    { id:'writing2', type:'writing', label:'영작 연습 2번 하기',           target:2,  xp:45,  icon:'✍️' },
+    { id:'read1',    type:'read',    label:'도서관 책 1챕터 읽기',          target:1,  xp:40,  icon:'📚' },
+  ],
+  4: [
+    { id:'chat5',    type:'chat',    label:'AI와 대화 5번 하기',          target:5,  xp:55,  icon:'🤖' },
+    { id:'vocab10',  type:'vocab',   label:'단어 플래시카드 10개 맞추기',   target:10, xp:50,  icon:'📖' },
+    { id:'tts3',     type:'tts',     label:'발음 연습 3번 하기',           target:3,  xp:45,  icon:'🎙️' },
+    { id:'writing2', type:'writing', label:'영작 연습 2번 하기',           target:2,  xp:50,  icon:'✍️' },
+    { id:'read1',    type:'read',    label:'도서관 책 1챕터 읽기',          target:1,  xp:45,  icon:'📚' },
+  ],
+  5: [
+    { id:'chat7',    type:'chat',    label:'AI와 대화 7번 하기',          target:7,  xp:65,  icon:'🤖' },
+    { id:'vocab12',  type:'vocab',   label:'단어 플래시카드 12개 맞추기',   target:12, xp:60,  icon:'📖' },
+    { id:'tts5',     type:'tts',     label:'발음 연습 5번 하기',           target:5,  xp:55,  icon:'🎙️' },
+    { id:'writing3', type:'writing', label:'영작 연습 3번 하기',           target:3,  xp:60,  icon:'✍️' },
+    { id:'read2',    type:'read',    label:'도서관 책 2챕터 읽기',          target:2,  xp:55,  icon:'📚' },
+  ],
+  6: [
+    { id:'chat10',   type:'chat',    label:'AI와 대화 10번 하기',         target:10, xp:80,  icon:'🤖' },
+    { id:'vocab15',  type:'vocab',   label:'단어 플래시카드 15개 맞추기',   target:15, xp:70,  icon:'📖' },
+    { id:'tts5',     type:'tts',     label:'발음 연습 5번 하기',           target:5,  xp:65,  icon:'🎙️' },
+    { id:'writing3', type:'writing', label:'영작 연습 3번 하기',           target:3,  xp:70,  icon:'✍️' },
+    { id:'read2',    type:'read',    label:'도서관 책 2챕터 읽기',          target:2,  xp:65,  icon:'📚' },
+  ],
+  7: [
+    { id:'chat10',   type:'chat',    label:'AI와 대화 10번 하기',         target:10, xp:90,  icon:'🤖' },
+    { id:'vocab20',  type:'vocab',   label:'단어 플래시카드 20개 맞추기',   target:20, xp:80,  icon:'📖' },
+    { id:'tts7',     type:'tts',     label:'발음 연습 7번 하기',           target:7,  xp:75,  icon:'🎙️' },
+    { id:'writing5', type:'writing', label:'영작 연습 5번 하기',           target:5,  xp:85,  icon:'✍️' },
+    { id:'read3',    type:'read',    label:'도서관 책 3챕터 읽기',          target:3,  xp:80,  icon:'📚' },
+  ],
+  8: [
+    { id:'chat15',   type:'chat',    label:'AI와 대화 15번 하기',         target:15, xp:100, icon:'🤖' },
+    { id:'vocab20',  type:'vocab',   label:'단어 플래시카드 20개 맞추기',   target:20, xp:90,  icon:'📖' },
+    { id:'tts7',     type:'tts',     label:'발음 연습 7번 하기',           target:7,  xp:85,  icon:'🎙️' },
+    { id:'writing5', type:'writing', label:'영작 연습 5번 하기',           target:5,  xp:95,  icon:'✍️' },
+    { id:'read3',    type:'read',    label:'도서관 책 3챕터 읽기',          target:3,  xp:90,  icon:'📚' },
+  ],
+  9: [
+    { id:'chat15',   type:'chat',    label:'AI와 대화 15번 하기',         target:15, xp:110, icon:'🤖' },
+    { id:'vocab25',  type:'vocab',   label:'단어 플래시카드 25개 맞추기',   target:25, xp:100, icon:'📖' },
+    { id:'tts10',    type:'tts',     label:'발음 연습 10번 하기',          target:10, xp:95,  icon:'🎙️' },
+    { id:'writing7', type:'writing', label:'영작 연습 7번 하기',           target:7,  xp:105, icon:'✍️' },
+    { id:'read5',    type:'read',    label:'도서관 책 5챕터 읽기',          target:5,  xp:100, icon:'📚' },
+  ],
+  10: [
+    { id:'chat20',   type:'chat',    label:'AI와 대화 20번 하기',         target:20, xp:130, icon:'🤖' },
+    { id:'vocab30',  type:'vocab',   label:'단어 플래시카드 30개 맞추기',   target:30, xp:120, icon:'📖' },
+    { id:'tts10',    type:'tts',     label:'발음 연습 10번 하기',          target:10, xp:110, icon:'🎙️' },
+    { id:'writing7', type:'writing', label:'영작 연습 7번 하기',           target:7,  xp:120, icon:'✍️' },
+    { id:'read5',    type:'read',    label:'도서관 책 5챕터 읽기',          target:5,  xp:115, icon:'📚' },
+  ],
+};
+
+function getTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function getMissionState() {
+  const key = 'em_missions_' + getTodayKey();
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : null;
+  } catch(e) { return null; }
+}
+
+function saveMissionState(ms) {
+  const key = 'em_missions_' + getTodayKey();
+  try { localStorage.setItem(key, JSON.stringify(ms)); } catch(e) {}
+}
+
+function initTodayMissions() {
+  const existing = getMissionState();
+  if (existing) return existing;
+
+  const level = state.userProfile?.level || 0;
+  const pool = MISSION_POOL[Math.min(level, 10)] || MISSION_POOL[0];
+
+  // 레벨에 따라 미션 수 결정 (0~1: 2개, 2~4: 3개, 5+: 3개)
+  const count = level <= 1 ? 2 : 3;
+  const chosen = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+
+  const ms = {
+    date: getTodayKey(),
+    level,
+    missions: chosen.map(m => ({ ...m, progress: 0, done: false, rewarded: false })),
+    bonusXP: chosen.reduce((s, m) => s + m.xp, 0),
+    allDone: false,
+  };
+  // login 미션은 즉시 1 진행
+  ms.missions.forEach(m => { if (m.type === 'login') m.progress = 1; });
+  saveMissionState(ms);
+  return ms;
+}
+
+function renderMissions() {
+  const ms = initTodayMissions();
+  const list = document.getElementById('missionList');
+  const bonusEl = document.getElementById('missionBonusXP');
+  if (!list) return;
+
+  const totalXP = ms.missions.reduce((s, m) => s + m.xp, 0);
+  if (bonusEl) bonusEl.textContent = `+${totalXP} XP 보상`;
+
+  list.innerHTML = ms.missions.map(m => {
+    const pct = Math.min((m.progress / m.target) * 100, 100);
+    const done = m.done;
+    return `
+    <div style="background:${done ? 'rgba(232,98,138,0.06)' : 'var(--bg)'}; border:1px solid ${done ? 'var(--accent)' : 'var(--border)'}; border-radius:10px; padding:12px 14px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <span style="font-size:20px;">${m.icon}</span>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:700; color:${done ? 'var(--accent)' : 'var(--text1)'};">${m.label}</div>
+          <div style="font-size:11px; color:var(--text2); margin-top:1px;">${m.progress} / ${m.target} ${done ? '✅ 완료!' : ''}</div>
+        </div>
+        <div style="font-size:12px; font-weight:800; color:var(--accent); background:rgba(232,98,138,0.12); padding:3px 9px; border-radius:20px; white-space:nowrap;">+${m.xp} XP</div>
+      </div>
+      <div style="background:var(--border); border-radius:4px; height:6px; overflow:hidden;">
+        <div style="background:${done ? 'var(--accent)' : 'linear-gradient(90deg,var(--accent),#f4a0b8)'}; height:100%; width:${pct}%; transition:width 0.4s; border-radius:4px;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 전체 완료 보너스 표시
+  if (ms.allDone) {
+    list.innerHTML += `<div style="text-align:center; padding:10px; font-size:13px; font-weight:700; color:var(--accent);">🎉 오늘 미션 모두 완료! 내일 새 미션이 기다려요!</div>`;
+  }
+}
+
+function updateMission(type) {
+  const ms = getMissionState();
+  if (!ms) return;
+
+  let changed = false;
+  ms.missions.forEach(m => {
+    if (m.type === type && !m.done) {
+      m.progress = Math.min(m.progress + 1, m.target);
+      if (m.progress >= m.target) {
+        m.done = true;
+        if (!m.rewarded) {
+          m.rewarded = true;
+          changed = true;
+          // XP 지급
+          if (state.idToken && state.idToken !== 'DEMO_TOKEN') {
+            apiCall('PATCH', '/api/user/xp', { amount: m.xp, source: 'mission_' + m.type }).catch(() => {});
+          }
+          // 토스트 알림
+          showMissionToast(m);
+        }
+      }
+    }
+  });
+
+  // 전체 완료 체크
+  if (!ms.allDone && ms.missions.every(m => m.done)) {
+    ms.allDone = true;
+    setTimeout(() => showMissionAllDoneToast(ms.missions.reduce((s,m)=>s+m.xp,0)), 800);
+  }
+
+  saveMissionState(ms);
+  renderMissions();
+}
+
+function showMissionToast(m) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),#f4a0b8);color:#fff;padding:12px 22px;border-radius:24px;font-size:13px;font-weight:800;z-index:9999;box-shadow:0 4px 20px rgba(232,98,138,0.4);animation:fadeInUp 0.3s ease;white-space:nowrap;`;
+  toast.textContent = `🎯 미션 완료! ${m.label} (+${m.xp} XP)`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function showMissionAllDoneToast(totalXP) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#ff6b9d,#ffa07a);color:#fff;padding:24px 32px;border-radius:20px;font-size:15px;font-weight:800;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.2);text-align:center;`;
+  toast.innerHTML = `🎉 오늘의 미션 완료!<br><span style="font-size:13px;opacity:0.9;font-weight:600;">총 +${totalXP} XP 획득! 내일도 화이팅!</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -2957,6 +3164,7 @@ const tabs = ['home','chat','wordbook','tts','writing','games','roadmap','librar
   if (page === 'library') setTimeout(loadLibrary, 500);
   if (page === 'writing') startWriting();
   if (page === 'games') initGamesHub();
+  if (page === 'home') { updateMission('login'); renderMissions(); }
 }
 // ─────────────────────────────────────
 // 프로필
@@ -3106,6 +3314,7 @@ function showScore(score, spoken, original) {
       인식된 발음: "${spoken}"
     </p>`;
   scoreResult.style.display = 'block';
+  updateMission('tts');
 }
 
 // ─────────────────────────────────────
@@ -3275,6 +3484,7 @@ async function sendChat() {
     if (state.idToken !== 'DEMO_TOKEN') {
       apiCall('PATCH', '/api/user/xp', { amount: 5, source: 'chat' }).catch(() => {});
     }
+    updateMission('chat');
 
   } catch(e) {
     typing.remove();
@@ -3772,6 +3982,7 @@ async function openBook(bookId) {
   // 본문 렌더링
   if (currentChapter) {
     renderReaderText(currentChapter.content);
+    updateMission('read');
   }
 
   // AI 채팅 초기화
@@ -4269,7 +4480,7 @@ async function checkWriting() {
   document.getElementById('writingNextBtn').style.display = 'none';
 
   const feedback = generateLocalFeedback(userAnswer, q);
-  setTimeout(() => renderWritingFeedback(feedback, q, userAnswer), 800);
+  setTimeout(() => { renderWritingFeedback(feedback, q, userAnswer); updateMission('writing'); }, 800);
 }
 
 function generateLocalFeedback(userAnswer, q) {
