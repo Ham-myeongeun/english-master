@@ -1081,10 +1081,23 @@
   .stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
   .goal-input-wrap { display: flex; align-items: center; margin-top: 12px; }
   /* 발음 점수 & 시나리오 */
-  .score-card { background: var(--surface2); border-radius: var(--radius); padding: 20px; text-align: center; border: 1px solid var(--border); }
-  .score-title { font-size: 14px; color: var(--text3); margin-bottom: 8px; }
-  .score-main { font-size: 48px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+  .score-card { background: var(--surface2); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
+  .score-title { font-size: 14px; color: var(--text3); margin-bottom: 8px; font-weight:700; }
+  .score-main { font-size: 52px; font-weight: 800; color: var(--accent); margin-bottom: 4px; text-align:center; }
   .score-feedback { font-size: 14px; color: var(--text2); }
+  .radar-wrap { display:flex; justify-content:center; margin:16px 0 8px; }
+  .metric-bar-wrap { margin-bottom:10px; }
+  .metric-label { display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:4px; }
+  .metric-bar-bg { background:var(--border); border-radius:6px; height:8px; overflow:hidden; }
+  .metric-bar-fill { height:100%; border-radius:6px; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .word-analysis { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+  .word-chip { padding:4px 10px; border-radius:20px; font-size:13px; font-weight:700; }
+  .word-chip.correct { background:rgba(82,183,136,0.18); color:#2d9d6a; border:1px solid rgba(82,183,136,0.3); }
+  .word-chip.wrong { background:rgba(232,98,138,0.15); color:var(--accent); border:1px solid rgba(232,98,138,0.25); text-decoration:line-through; }
+  .word-chip.extra { background:rgba(224,159,62,0.15); color:var(--gold); border:1px solid rgba(224,159,62,0.25); }
+  .history-bar { display:flex; align-items:flex-end; gap:4px; height:60px; margin-top:8px; }
+  .history-bar-item { flex:1; background:linear-gradient(180deg,var(--accent),#f4a0b8); border-radius:4px 4px 0 0; min-width:12px; transition:height 0.5s ease; position:relative; cursor:default; }
+  .history-bar-item:hover::after { content:attr(data-score)'점'; position:absolute; bottom:105%; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:2px 6px; font-size:10px; font-weight:700; white-space:nowrap; color:var(--text); }
   .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
   .scenario-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 8px; text-align: center; cursor: pointer; font-size: 14px; transition: all 0.2s; }
   .scenario-card:hover { background: var(--petal1); border-color: var(--accent); }
@@ -1925,7 +1938,60 @@
         <div id="scoreResult" style="display:none;" class="score-card">
           <div class="score-title">📊 발음 분석 결과</div>
           <div class="score-main" id="scoreMain">--</div>
-          <div class="score-feedback" id="scoreFeedback"></div>
+
+          <!-- 레이더 차트 -->
+          <div class="radar-wrap">
+            <canvas id="radarChart" width="200" height="200"></canvas>
+          </div>
+
+          <!-- 3가지 지표 바 -->
+          <div style="margin:12px 0;">
+            <div class="metric-bar-wrap">
+              <div class="metric-label">
+                <span>🎯 정확도</span><span id="metricAccuracy">0%</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barAccuracy" style="width:0%;background:linear-gradient(90deg,#52b788,#20bf6b);"></div>
+              </div>
+            </div>
+            <div class="metric-bar-wrap">
+              <div class="metric-label">
+                <span>⚡ 유창성</span><span id="metricFluency">0%</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barFluency" style="width:0%;background:linear-gradient(90deg,#5c6bc0,#3949ab);"></div>
+              </div>
+            </div>
+            <div class="metric-bar-wrap">
+              <div class="metric-label">
+                <span>📝 완성도</span><span id="metricCompleteness">0%</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barCompleteness" style="width:0%;background:linear-gradient(90deg,var(--accent),#f4a0b8);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 단어별 분석 -->
+          <div style="margin:12px 0;">
+            <div style="font-size:12px; font-weight:700; color:var(--text2); margin-bottom:6px;">🔤 단어별 분석</div>
+            <div class="word-analysis" id="wordAnalysis"></div>
+            <div style="display:flex; gap:12px; margin-top:6px; font-size:11px; color:var(--text3);">
+              <span>🟢 정확</span><span>🔴 오류</span><span>🟡 추가된 단어</span>
+            </div>
+          </div>
+
+          <!-- AI 피드백 -->
+          <div id="scoreFeedback" style="background:var(--surface); border-radius:12px; padding:12px 14px; margin:12px 0; border:1px solid var(--border);"></div>
+
+          <!-- 히스토리 -->
+          <div style="margin-top:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-size:12px; font-weight:700; color:var(--text2);">📈 최근 기록</div>
+              <div id="historyAvg" style="font-size:11px; color:var(--text3);"></div>
+            </div>
+            <div class="history-bar" id="historyBar"></div>
+          </div>
         </div>
       </div>
 
@@ -3285,33 +3351,200 @@ function stopRecording() {
   document.getElementById('recordingStatus').style.display = 'none';
 }
 
+// 발음 히스토리 (localStorage)
+function getPronHistory() {
+  try { return JSON.parse(localStorage.getItem('em_pron_history') || '[]'); } catch(e) { return []; }
+}
+function savePronHistory(score) {
+  const h = getPronHistory();
+  h.push({ score, time: Date.now() });
+  if (h.length > 10) h.shift();
+  try { localStorage.setItem('em_pron_history', JSON.stringify(h)); } catch(e) {}
+}
+
 function calculateScore(spoken, original) {
-  const spokenWords = spoken.split(' ');
-  const originalWords = original.split(' ');
+  const normalize = s => s.toLowerCase().replace(/[.,!?;:'"]/g, '').trim();
+  const spokenWords = normalize(spoken).split(/\s+/);
+  const originalWords = normalize(original).split(/\s+/);
   let correct = 0;
-  originalWords.forEach(word => {
-    if (spokenWords.includes(word)) correct++;
-  });
+  originalWords.forEach(w => { if (spokenWords.includes(w)) correct++; });
   return Math.round((correct / originalWords.length) * 100);
 }
 
+function analyzeWords(spoken, original) {
+  const normalize = s => s.toLowerCase().replace(/[.,!?;:'"]/g, '').trim();
+  const spokenWords = normalize(spoken).split(/\s+/);
+  const originalWords = normalize(original).split(/\s+/);
+
+  const correctSet = new Set(spokenWords.filter(w => originalWords.includes(w)));
+  const wrongWords = originalWords.filter(w => !spokenWords.includes(w));
+  const extraWords = spokenWords.filter(w => !originalWords.includes(w));
+
+  // 정확도: 맞춘 단어 비율
+  const accuracy = Math.round((correctSet.size / originalWords.length) * 100);
+  // 유창성: 단어 수 비율 (너무 적거나 많으면 낮음)
+  const lengthRatio = spokenWords.length / originalWords.length;
+  const fluency = Math.round(Math.max(0, 100 - Math.abs(1 - lengthRatio) * 80));
+  // 완성도: 원문 단어 포함 비율
+  const completeness = Math.round((originalWords.length - wrongWords.length) / originalWords.length * 100);
+
+  return { accuracy, fluency, completeness, correctSet, wrongWords, extraWords, originalWords, spokenWords };
+}
+
+function drawRadar(accuracy, fluency, completeness) {
+  const canvas = document.getElementById('radarChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2, r = 70;
+  ctx.clearRect(0, 0, W, H);
+
+  const labels = ['정확도', '유창성', '완성도'];
+  const values = [accuracy / 100, fluency / 100, completeness / 100];
+  const colors = ['#52b788', '#5c6bc0', '#e8986a'];
+  const angles = [-Math.PI/2, -Math.PI/2 + 2*Math.PI/3, -Math.PI/2 + 4*Math.PI/3];
+
+  // 배경 그리드
+  for (let i = 1; i <= 4; i++) {
+    ctx.beginPath();
+    angles.forEach((a, idx) => {
+      const x = cx + r * (i/4) * Math.cos(a);
+      const y = cy + r * (i/4) * Math.sin(a);
+      idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(180,180,180,0.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // 축
+  angles.forEach(a => {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+    ctx.strokeStyle = 'rgba(180,180,180,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // 데이터 영역
+  ctx.beginPath();
+  angles.forEach((a, i) => {
+    const x = cx + r * values[i] * Math.cos(a);
+    const y = cy + r * values[i] * Math.sin(a);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(232,98,138,0.18)';
+  ctx.fill();
+  ctx.strokeStyle = '#e8986a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 점
+  angles.forEach((a, i) => {
+    const x = cx + r * values[i] * Math.cos(a);
+    const y = cy + r * values[i] * Math.sin(a);
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2*Math.PI);
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+  });
+
+  // 라벨
+  ctx.font = 'bold 11px Nunito, sans-serif';
+  ctx.textAlign = 'center';
+  const labelAngles = angles;
+  labels.forEach((label, i) => {
+    const lx = cx + (r + 18) * Math.cos(labelAngles[i]);
+    const ly = cy + (r + 18) * Math.sin(labelAngles[i]);
+    ctx.fillStyle = colors[i];
+    ctx.fillText(label, lx, ly + 4);
+  });
+}
+
+function renderHistoryBar(currentScore) {
+  const history = getPronHistory();
+  const barEl = document.getElementById('historyBar');
+  const avgEl = document.getElementById('historyAvg');
+  if (!barEl) return;
+
+  if (history.length === 0) {
+    barEl.innerHTML = '<div style="font-size:12px;color:var(--text3);width:100%;text-align:center;">아직 기록이 없어요</div>';
+    return;
+  }
+
+  const avg = Math.round(history.reduce((s, h) => s + h.score, 0) / history.length);
+  if (avgEl) avgEl.textContent = `평균 ${avg}점`;
+
+  const maxScore = Math.max(...history.map(h => h.score), 1);
+  barEl.innerHTML = history.map((h, i) => {
+    const pct = Math.max(8, (h.score / 100) * 100);
+    const isLast = i === history.length - 1;
+    const color = isLast ? 'linear-gradient(180deg,#e8986a,#f4a0b8)' : 'linear-gradient(180deg,var(--accent),#f4a0b8)';
+    return `<div class="history-bar-item" data-score="${h.score}"
+      style="height:${pct}%;background:${color};opacity:${isLast ? 1 : 0.6};"></div>`;
+  }).join('');
+}
+
 function showScore(score, spoken, original) {
+  const analysis = analyzeWords(spoken, original);
+  const { accuracy, fluency, completeness, correctSet, wrongWords, extraWords, originalWords } = analysis;
+
+  // 점수 저장
+  savePronHistory(score);
+
+  // 메인 점수
   const scoreResult = document.getElementById('scoreResult');
   const scoreMain = document.getElementById('scoreMain');
-  const scoreFeedback = document.getElementById('scoreFeedback');
-
-  let emoji = score >= 90 ? '🏆' : score >= 70 ? '👍' : score >= 50 ? '😊' : '💪';
-  let feedback = score >= 90 ? '완벽해요! 원어민 수준입니다!'
-          : score >= 70 ? '잘 하셨어요! 조금만 더 연습해봐요!'
-                  : score >= 50 ? '괜찮아요! 계속 연습하면 늘어요!'
-                          : '처음엔 어려워요! 포기하지 마세요!';
-
+  const emoji = score >= 90 ? '🏆' : score >= 70 ? '👍' : score >= 50 ? '😊' : '💪';
   scoreMain.textContent = `${emoji} ${score}점`;
-  scoreFeedback.innerHTML = `
-    <p>${feedback}</p>
-    <p style="margin-top:8px;font-size:13px;color:var(--text3);">
-      인식된 발음: "${spoken}"
-    </p>`;
+
+  // 지표 바 애니메이션
+  setTimeout(() => {
+    document.getElementById('barAccuracy').style.width = accuracy + '%';
+    document.getElementById('barFluency').style.width = fluency + '%';
+    document.getElementById('barCompleteness').style.width = completeness + '%';
+    document.getElementById('metricAccuracy').textContent = accuracy + '%';
+    document.getElementById('metricFluency').textContent = fluency + '%';
+    document.getElementById('metricCompleteness').textContent = completeness + '%';
+  }, 100);
+
+  // 레이더 차트
+  setTimeout(() => drawRadar(accuracy, fluency, completeness), 200);
+
+  // 단어별 분석
+  const wordEl = document.getElementById('wordAnalysis');
+  if (wordEl) {
+    wordEl.innerHTML = originalWords.map(w => {
+      const cls = correctSet.has(w) ? 'correct' : 'wrong';
+      return `<span class="word-chip ${cls}">${w}</span>`;
+    }).join('') +
+    extraWords.filter(w => w.length > 0).map(w =>
+      `<span class="word-chip extra">${w}</span>`
+    ).join('');
+  }
+
+  // AI 피드백
+  const feedbackEl = document.getElementById('scoreFeedback');
+  let feedback = '';
+  if (score >= 90) {
+    feedback = `<div style="font-size:22px;text-align:center;margin-bottom:6px;">🏆</div><div style="font-weight:800;color:#2d9d6a;text-align:center;margin-bottom:4px;">완벽해요! 원어민 수준이에요!</div><div style="font-size:12px;color:var(--text2);text-align:center;">모든 단어를 정확하게 발음했어요 👏</div>`;
+  } else if (score >= 70) {
+    const missed = wrongWords.slice(0, 3).join(', ');
+    feedback = `<div style="font-weight:800;color:var(--accent);margin-bottom:4px;">👍 잘 하셨어요!</div><div style="font-size:12px;color:var(--text2);">조금 더 연습이 필요한 단어: <strong>${missed || '없음'}</strong></div><div style="font-size:12px;color:var(--text3);margin-top:4px;">💡 틀린 단어를 반복해서 들으며 따라해보세요!</div>`;
+  } else if (score >= 40) {
+    feedback = `<div style="font-weight:800;color:var(--gold);margin-bottom:4px;">😊 좋은 시작이에요!</div><div style="font-size:12px;color:var(--text2);">원어민 발음을 먼저 여러 번 듣고 따라하면 도움이 돼요.</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">💡 천천히 한 단어씩 연습해보세요!</div>`;
+  } else {
+    feedback = `<div style="font-weight:800;color:var(--accent2);margin-bottom:4px;">💪 포기하지 마세요!</div><div style="font-size:12px;color:var(--text2);">처음엔 누구나 어려워요. 꾸준히 하면 반드시 늘어요!</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">💡 짧은 문장부터 시작해보세요!</div>`;
+  }
+  feedback += `<div style="margin-top:8px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:6px;">🎤 인식된 발음: "${spoken}"</div>`;
+  if (feedbackEl) feedbackEl.innerHTML = feedback;
+
+  // 히스토리 바
+  renderHistoryBar(score);
+
   scoreResult.style.display = 'block';
   updateMission('tts');
 }
